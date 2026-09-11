@@ -1,0 +1,32 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PUBLIC_ORIGIN: https://${DOMAIN:?Set DOMAIN in .env}
+      SETUP_TOKEN: ${SETUP_TOKEN:?Set a random SETUP_TOKEN in .env}
+      DATABASE_PATH: /app/data/accounts.sqlite
+      TRUST_PROXY_HOPS: '1'
+    volumes:
+      - account-data:/app/data
+    expose:
+      - '3000'
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+volumes:
+  account-data:
+  caddy-data:
+  caddy-config:
